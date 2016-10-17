@@ -12,13 +12,43 @@ class MoviesController < ApplicationController
 
   def index
 
+    
+
+    # update session
+    if params[:ratings] && (!session[:ratings] || params[:ratings] != session[:ratings])
+      session[:ratings] = params[:ratings]
+    end
+    if params[:sort] && (!session[:sort] || params[:sort] != session[:sort])
+      session[:sort] = params[:sort]
+    end
+
+    # check for redirect if no params provided
+    redirect_check = false
+    if session[:ratings] && !params[:ratings]
+      params[:ratings] = session[:ratings]
+      redirect_check = true
+    end
+     if session[:sort] && !params[:sort]
+      params[:sort] = session[:sort]
+      redirect_check = true
+    end
+
+    # redirect if needed
+    if redirect_check
+      flash.keep
+      redirect_to movies_path(params)
+    end
+
+    # get all possible rating for checkboxes
     @all_ratings = Movie.all_ratings
     current_rating_selection = @all_ratings
 
+    # update current_rating based on params
     if params[:ratings]
       current_rating_selection = params[:ratings].keys
     end
 
+    # use sorted based on sort param
     if params[:sort] == "title"
       @movies = Movie.where(rating: current_rating_selection).order(title: :asc)
     elsif params[:sort] == "date"
